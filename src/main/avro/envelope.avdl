@@ -1,0 +1,10 @@
+@namespace("com.github.envelope")
+protocol Envelope {
+  record Frame {
+    long id;          // connection unique message id
+    int channel = 0;  // logical connection
+    int chunk   = 1;  // -chunk specifies last chunk
+    map<string> tags; // metadata for this packet
+    bytes data;
+  }
+}
