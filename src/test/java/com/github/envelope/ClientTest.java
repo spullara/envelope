@@ -12,16 +12,9 @@ import java.util.HashMap;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * TODO: Edit this
- * <p/>
- * User: sam
- * Date: 11/11/12
- * Time: 10:06 PM
- */
 public class ClientTest {
 
-  private static final int CALLS = 10000000;
+  private static final long CALLS = 10000000;
 
   private AtomicInteger i = new AtomicInteger(0);
 
@@ -74,15 +67,16 @@ public class ClientTest {
     register.addListener(new ChannelFutureListener() {
       @Override
       public void operationComplete(ChannelFuture future) throws Exception {
-        final long start = System.currentTimeMillis();
-        ch.pipeline().addLast(new FrameEncoder(), new FrameDecoder(),
+        final Semaphore pipelines = new Semaphore(1000);
+        DefaultEventExecutorGroup group = new DefaultEventExecutorGroup(1);
+        ch.pipeline().addLast(group, new FrameEncoder(), new FrameDecoder(),
                 new ChannelInboundMessageHandlerAdapter<Frame>() {
                   @Override
                   public void messageReceived(ChannelHandlerContext channelHandlerContext, Frame frame) throws Exception {
                     if (i.intValue() >= CALLS) {
-                      System.out.println(CALLS * 1000 / (System.currentTimeMillis() - start) + " calls per second");
                       semaphore.release();
                     }
+                    pipelines.release();
                   }
                 });
         ch.connect(new InetSocketAddress("localhost", 6380)).addListener(new ChannelFutureListener() {
@@ -91,15 +85,9 @@ public class ClientTest {
             es.submit(new Callable<Object>() {
               @Override
               public Object call() throws Exception {
-                final Semaphore pipelines = new Semaphore(100);
                 while (i.intValue() < CALLS) {
                   pipelines.acquire(1);
-                  write(ch).addListener(new ChannelFutureListener() {
-                    @Override
-                    public void operationComplete(ChannelFuture future) throws Exception {
-                      pipelines.release();
-                    }
-                  });
+                  write(ch);
                 }
                 pipelines.acquire(100);
                 return null;
@@ -109,7 +97,9 @@ public class ClientTest {
         });
       }
     });
+    long start = System.currentTimeMillis();
     semaphore.acquire();
+    System.out.println(CALLS * 1000l / (System.currentTimeMillis() - start) + " calls per second");
   }
 
   @Test

@@ -6,6 +6,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.DefaultEventExecutorGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -45,6 +46,7 @@ public class Server {
     final FrameDecoder frameDecoder = new FrameDecoder();
     final FrameEncoder frameEncoder = new FrameEncoder();
     final FrameHandler frameHandler = new FrameHandler(server);
+    final DefaultEventExecutorGroup group = new DefaultEventExecutorGroup(1);
     try {
         b.group(new NioEventLoopGroup(), new NioEventLoopGroup())
          .channel(NioServerSocketChannel.class)
@@ -54,7 +56,7 @@ public class Server {
          .childHandler(new ChannelInitializer<SocketChannel>() {
              @Override
              public void initChannel(SocketChannel ch) throws Exception {
-               ch.pipeline().addLast(frameDecoder, frameEncoder, frameHandler);
+               ch.pipeline().addLast(group, frameDecoder, frameEncoder, frameHandler);
              }
          });
 
