@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
- * Redis server
+ * Frame server.
  */
 public class Server {
   @Argument(alias = "p")
@@ -46,25 +46,25 @@ public class Server {
     final FrameDecoder frameDecoder = new FrameDecoder();
     final FrameEncoder frameEncoder = new FrameEncoder();
     final FrameHandler frameHandler = new FrameHandler(server);
-    final DefaultEventExecutorGroup group = new DefaultEventExecutorGroup(1);
+    final DefaultEventExecutorGroup group = new DefaultEventExecutorGroup(Runtime.getRuntime().availableProcessors());
     try {
-        b.group(new NioEventLoopGroup(), new NioEventLoopGroup())
-         .channel(NioServerSocketChannel.class)
-         .option(ChannelOption.SO_BACKLOG, 100)
-         .localAddress(port)
-         .childOption(ChannelOption.TCP_NODELAY, true)
-         .childHandler(new ChannelInitializer<SocketChannel>() {
-             @Override
-             public void initChannel(SocketChannel ch) throws Exception {
-               ch.pipeline().addLast(group, frameDecoder, frameEncoder, frameHandler);
-             }
-         });
+      b.group(new NioEventLoopGroup(), new NioEventLoopGroup())
+              .channel(NioServerSocketChannel.class)
+              .option(ChannelOption.SO_BACKLOG, 100)
+              .localAddress(port)
+              .childOption(ChannelOption.TCP_NODELAY, true)
+              .childHandler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                public void initChannel(SocketChannel ch) throws Exception {
+                  ch.pipeline().addLast(group, frameDecoder, frameEncoder, frameHandler);
+                }
+              });
 
-        // Start the server and wait until the server socket is closed.
-        b.bind().sync().channel().closeFuture().sync();
+      // Start the server and wait until the server socket is closed.
+      b.bind().sync().channel().closeFuture().sync();
     } finally {
-        // Shut down all event loops to terminate all threads.
-        b.shutdown();
+      // Shut down all event loops to terminate all threads.
+      b.shutdown();
     }
   }
 
