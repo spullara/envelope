@@ -22,7 +22,7 @@ public class AvroTest {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     BinaryEncoder be = ef.binaryEncoder(out, null);
     SpecificDatumWriter<Frame> frameWriter = new SpecificDatumWriter<>(Frame.class);
-    frameWriter.write(new Frame(0l, 0, -1, new HashMap<CharSequence, CharSequence>(), ByteBuffer.allocate(0)), be);
+    frameWriter.write(new Frame(0l, 0, -1, new HashMap<>(), ByteBuffer.allocate(0)), be);
     be.flush();
     assertEquals(5, out.toByteArray().length);
   }

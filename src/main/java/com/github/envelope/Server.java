@@ -34,12 +34,7 @@ public class Server {
     final Server server = new Server();
 
     // Echo service
-    server.addService(0, new Service<Frame>() {
-      @Override
-      public void handle(ChannelHandlerContext ctx, Frame message) {
-        ctx.write(message);
-      }
-    });
+    server.addService(0, ChannelHandlerContext::write);
 
     // Configure the network
     ServerBootstrap b = new ServerBootstrap();
@@ -68,6 +63,7 @@ public class Server {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void addService(int channel, Service service) {
     services.put(channel, service);
   }

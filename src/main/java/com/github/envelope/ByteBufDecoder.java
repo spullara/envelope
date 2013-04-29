@@ -34,7 +34,7 @@ import java.nio.ByteBuffer;
  * The number of unused bytes in the buffer can be accessed by
  * inputStream().remaining(), if the BinaryDecoder is not 'direct'.
  * 
- * @see Encoder
+ * @see ByteBufEncoder
  */
 
 public class ByteBufDecoder extends Decoder {
