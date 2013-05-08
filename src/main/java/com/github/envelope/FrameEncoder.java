@@ -13,8 +13,15 @@ import org.apache.avro.specific.SpecificDatumWriter;
 public class FrameEncoder extends MessageToByteEncoder<Frame> {
   private static final SpecificDatumWriter<Frame> writer = new SpecificDatumWriter<>(Frame.class);
 
+  private ThreadLocal<ByteBufEncoder> encoder = new ThreadLocal<ByteBufEncoder>() {
+    @Override
+    protected ByteBufEncoder initialValue() {
+      return new ByteBufEncoder();
+    }
+  };
+
   @Override
   public void encode(ChannelHandlerContext channelHandlerContext, Frame frame, ByteBuf byteBuf) throws Exception {
-    writer.write(frame, new ByteBufEncoder(byteBuf));
+    writer.write(frame, encoder.get().setBuf(byteBuf));
   }
 }

@@ -39,10 +39,18 @@ import java.nio.ByteBuffer;
  */
 public class ByteBufEncoder extends Encoder {
 
-  private final ByteBuf out;
+  private ByteBuf buf;
 
-  public ByteBufEncoder(ByteBuf out) {
-    this.out = out;
+  public ByteBufEncoder() {
+  }
+
+  public ByteBufEncoder(ByteBuf buf) {
+    this.buf = buf;
+  }
+
+  public ByteBufEncoder setBuf(ByteBuf buf) {
+    this.buf = buf;
+    return this;
   }
 
   @Override
@@ -51,7 +59,7 @@ public class ByteBufEncoder extends Encoder {
 
   @Override
   public void writeBoolean(boolean b) throws IOException {
-    out.writeByte(b ? 1 : 0);
+    buf.writeByte(b ? 1 : 0);
   }
 
   /* buffering is slower for ints that encode to just 1 or
@@ -61,33 +69,33 @@ public class ByteBufEncoder extends Encoder {
   public void writeInt(int n) throws IOException {
     int val = (n << 1) ^ (n >> 31);
     if ((val & ~0x7F) == 0) {
-      out.writeByte(val);
+      buf.writeByte(val);
       return;
     } else if ((val & ~0x3FFF) == 0) {
-      out.writeByte(0x80 | val);
-      out.writeByte(val >>> 7);
+      buf.writeByte(0x80 | val);
+      buf.writeByte(val >>> 7);
       return;
     }
     int n1 = n;
     // move sign to low-order bit, and flip others if negative
     n1 = (n1 << 1) ^ (n1 >> 31);
     if ((n1 & ~0x7F) != 0) {
-      out.writeByte((byte)((n1 | 0x80) & 0xFF));
+      buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
       n1 >>>= 7;
       if (n1 > 0x7F) {
-        out.writeByte((byte)((n1 | 0x80) & 0xFF));
+        buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
         n1 >>>= 7;
         if (n1 > 0x7F) {
-          out.writeByte((byte)((n1 | 0x80) & 0xFF));
+          buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
           n1 >>>= 7;
           if (n1 > 0x7F) {
-            out.writeByte((byte)((n1 | 0x80) & 0xFF));
+            buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
             n1 >>>= 7;
           }
         }
       }
     }
-    out.writeByte((byte) n1);
+    buf.writeByte((byte) n1);
 
   }
 
@@ -95,22 +103,22 @@ public class ByteBufEncoder extends Encoder {
     // move sign to low-order bit, and flip others if negative
     n1 = (n1 << 1) ^ (n1 >> 31);
     if ((n1 & ~0x7F) != 0) {
-      out.writeByte((byte)((n1 | 0x80) & 0xFF));
+      buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
       n1 >>>= 7;
       if (n1 > 0x7F) {
-        out.writeByte((byte)((n1 | 0x80) & 0xFF));
+        buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
         n1 >>>= 7;
         if (n1 > 0x7F) {
-          out.writeByte((byte)((n1 | 0x80) & 0xFF));
+          buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
           n1 >>>= 7;
           if (n1 > 0x7F) {
-            out.writeByte((byte)((n1 | 0x80) & 0xFF));
+            buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
             n1 >>>= 7;
           }
         }
       }
     }
-    out.writeByte((byte) n1);
+    buf.writeByte((byte) n1);
   }
 
   /* buffering is slower for writeLong when the number is small enough to
@@ -122,41 +130,41 @@ public class ByteBufEncoder extends Encoder {
     if ((val & ~0x7FFFFFFFL) == 0) {
       int i = (int) val;
       while ((i & ~0x7F) != 0) {
-        out.writeByte((byte) ((0x80 | i) & 0xFF));
+        buf.writeByte((byte) ((0x80 | i) & 0xFF));
         i >>>= 7;
       }
-      out.writeByte((byte) i);
+      buf.writeByte((byte) i);
       return;
     }
     long n1 = n;
     // move sign to low-order bit, and flip others if negative
     n1 = (n1 << 1) ^ (n1 >> 63);
     if ((n1 & ~0x7FL) != 0) {
-      out.writeByte((byte)((n1 | 0x80) & 0xFF));
+      buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
       n1 >>>= 7;
       if (n1 > 0x7F) {
-        out.writeByte((byte)((n1 | 0x80) & 0xFF));
+        buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
         n1 >>>= 7;
         if (n1 > 0x7F) {
-          out.writeByte((byte)((n1 | 0x80) & 0xFF));
+          buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
           n1 >>>= 7;
           if (n1 > 0x7F) {
-            out.writeByte((byte)((n1 | 0x80) & 0xFF));
+            buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
             n1 >>>= 7;
             if (n1 > 0x7F) {
-              out.writeByte((byte)((n1 | 0x80) & 0xFF));
+              buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
               n1 >>>= 7;
               if (n1 > 0x7F) {
-                out.writeByte((byte)((n1 | 0x80) & 0xFF));
+                buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
                 n1 >>>= 7;
                 if (n1 > 0x7F) {
-                  out.writeByte((byte)((n1 | 0x80) & 0xFF));
+                  buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
                   n1 >>>= 7;
                   if (n1 > 0x7F) {
-                    out.writeByte((byte)((n1 | 0x80) & 0xFF));
+                    buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
                     n1 >>>= 7;
                     if (n1 > 0x7F) {
-                      out.writeByte((byte)((n1 | 0x80) & 0xFF));
+                      buf.writeByte((byte) ((n1 | 0x80) & 0xFF));
                       n1 >>>= 7;
                     }
                   }
@@ -167,17 +175,17 @@ public class ByteBufEncoder extends Encoder {
         }
       }
     }
-    out.writeByte((byte) n1);
+    buf.writeByte((byte) n1);
   }
 
   @Override
   public void writeFloat(float f) throws IOException {
     int bits = Float.floatToRawIntBits(f);
     // hotspot compiler works well with this variant
-    out.writeByte((byte)((bits       ) & 0xFF));
-    out.writeByte((byte)((bits >>>  8) & 0xFF));
-    out.writeByte((byte)((bits >>> 16) & 0xFF));
-    out.writeByte((byte) ((bits >>> 24) & 0xFF));
+    buf.writeByte((byte) ((bits) & 0xFF));
+    buf.writeByte((byte) ((bits >>> 8) & 0xFF));
+    buf.writeByte((byte) ((bits >>> 16) & 0xFF));
+    buf.writeByte((byte) ((bits >>> 24) & 0xFF));
   }
 
   @Override
@@ -187,23 +195,23 @@ public class ByteBufEncoder extends Encoder {
     int second = (int)((bits >>> 32) & 0xFFFFFFFF);
     // the compiler seems to execute this order the best, likely due to
     // register allocation -- the lifetime of constants is minimized.
-    out.writeByte((byte)((first        ) & 0xFF));
-    out.writeByte((byte)((second       ) & 0xFF));
-    out.writeByte((byte)((second >>>  8) & 0xFF));
-    out.writeByte((byte)((first >>>   8) & 0xFF));
-    out.writeByte((byte)((first >>>  16) & 0xFF));
-    out.writeByte((byte)((second >>> 16) & 0xFF));
-    out.writeByte((byte)((second >>> 24) & 0xFF));
-    out.writeByte((byte)((first >>>  24) & 0xFF));
+    buf.writeByte((byte) ((first) & 0xFF));
+    buf.writeByte((byte) ((second) & 0xFF));
+    buf.writeByte((byte) ((second >>> 8) & 0xFF));
+    buf.writeByte((byte) ((first >>> 8) & 0xFF));
+    buf.writeByte((byte) ((first >>> 16) & 0xFF));
+    buf.writeByte((byte) ((second >>> 16) & 0xFF));
+    buf.writeByte((byte) ((second >>> 24) & 0xFF));
+    buf.writeByte((byte) ((first >>> 24) & 0xFF));
   }
 
   @Override
   public void writeFixed(byte[] bytes, int start, int len) throws IOException {
-    out.writeBytes(bytes, start, len);
+    buf.writeBytes(bytes, start, len);
   }
 
   protected void writeZero() throws IOException {
-    out.writeByte(0);
+    buf.writeByte(0);
   }
 
   @Override

@@ -41,7 +41,6 @@ public class Server {
     final FrameDecoder frameDecoder = new FrameDecoder();
     final FrameEncoder frameEncoder = new FrameEncoder();
     final FrameHandler frameHandler = new FrameHandler(server);
-    final DefaultEventExecutorGroup group = new DefaultEventExecutorGroup(Runtime.getRuntime().availableProcessors());
     try {
       b.group(new NioEventLoopGroup(), new NioEventLoopGroup())
               .channel(NioServerSocketChannel.class)
@@ -51,20 +50,21 @@ public class Server {
               .childHandler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
-                  ch.pipeline().addLast(group, frameDecoder, frameEncoder, frameHandler);
+                  ch.pipeline().addLast(frameDecoder, frameEncoder, frameHandler);
                 }
               });
 
       // Start the server and wait until the server socket is closed.
-      b.bind().sync().channel().closeFuture().sync();
+      b.bind().addListener(f -> {
+        server.log.info("Listening on port " + port);
+      }).sync().channel().closeFuture().sync();
     } finally {
       // Shut down all event loops to terminate all threads.
       b.shutdown();
     }
   }
 
-  @SuppressWarnings("unchecked")
-  public void addService(int channel, Service service) {
+  public void addService(int channel, Service<Frame> service) {
     services.put(channel, service);
   }
 

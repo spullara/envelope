@@ -47,8 +47,16 @@ public class ByteBufDecoder extends Decoder {
   // hurts performance.
   private ByteBuf buf = null;
 
+  public ByteBufDecoder() {
+  }
+
   public ByteBufDecoder(ByteBuf buf) {
     this.buf = buf;
+  }
+
+  public ByteBufDecoder setBuf(ByteBuf buf) {
+    this.buf = buf;
+    return this;
   }
 
   @Override

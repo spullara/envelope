@@ -14,10 +14,17 @@ import org.apache.avro.specific.SpecificDatumReader;
 public class FrameDecoder extends ByteToMessageDecoder<Frame> {
   private final static SpecificDatumReader<Frame> reader = new SpecificDatumReader<>(Frame.class);
 
+  private ThreadLocal<ByteBufDecoder> decoder = new ThreadLocal<ByteBufDecoder>() {
+    @Override
+    protected ByteBufDecoder initialValue() {
+      return new ByteBufDecoder();
+    }
+  };
+
   @Override
   public Frame decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
     int index = byteBuf.readerIndex();
-    Decoder bd = new ByteBufDecoder(byteBuf);
+    Decoder bd = decoder.get().setBuf(byteBuf);
     try {
       return reader.read(null, bd);
     } catch (IndexOutOfBoundsException eof) {

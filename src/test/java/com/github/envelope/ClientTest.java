@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientTest {
 
-  private static final long CALLS = 10000;
+  private static final long CALLS = 10000000;
 
   private AtomicInteger i = new AtomicInteger(0);
 
